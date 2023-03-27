@@ -22,6 +22,8 @@ import sys
 import os
 import time
 import threading
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+
 
 sys.path.append('/home/viktor/NFT/DALLE-pytorch')
 
@@ -50,6 +52,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 from nft_metadata import create_metadata, save_metadata_to_csv, save_metadata_to_json
+from crypto import create_image
+
 # Set seed value
 seed_value = 42
 os.environ['PYTHONHASHSEED']=str(seed_value)
@@ -58,12 +62,28 @@ np.random.seed(seed_value)
 tf.random.set_seed(seed_value)
 
 # Generate filename dynamically based on seed value
-input_folder = "/home/viktor/NFT/output"
-nft_image_filename = os.path.join(input_folder, f"nft_seed42.jpg")
+# Generate the image
 
 
-# Load image
+
+
+
+output_folder = 'output'
+
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+
+seed = 42
+t = threading.Thread(target=create_image, args=(seed, output_folder))
+t.start()
+t.join()
+
+nft_image_filename = os.path.join(output_folder, f"nft_seed{seed}.png")
 img = image.load_img(nft_image_filename, target_size=(224, 224))
+
+# Continue with the rest of your code
+
+
 
 
 # Load the pre-trained VGG16 model
@@ -143,21 +163,18 @@ def extract_attribute_values(image_path):
     # For now, I will return an example dictionary.
     return {"attribute1": "value1", "attribute2": "value2"}
 def extract_image_features(image_path):
-    # Load the InceptionV3 model
-    model = tf.keras.applications.InceptionV3(include_top=False, weights='imagenet', pooling='avg')
+    img = image.load_img(image_path, target_size=(299, 299))
+    img = img.convert("RGB")  # Add this line to convert the image to RGB
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = preprocess_input(img_array)
 
-    # Load the image and resize it to the required dimensions for the model
-    image = Image.open(image_path)
-    image = image.resize((299, 299))
-
-    # Convert the image to a numpy array and normalize the pixel values
-    image_array = np.array(image) / 255.0
-    image_array = np.expand_dims(image_array, axis=0)
-
-    # Extract features from the image using the model
-    features = model.predict(image_array)
+    model = InceptionV3(weights='imagenet', include_top=False)
+    features = model.predict(img_array)
     return features
-image_features = extract_image_features(image_path)
+
+image_features = extract_image_features(nft_image_filename)
+
 print("Image features:", image_features)
 
 def extract_attributes(image_path):
@@ -392,22 +409,6 @@ img = image.load_img(nft_image_filename, target_size=(224, 224))
 # Generate the image
 # Generate the image
 # Generate the image
-seed = 42
-output_folder = "output"
-
-# Create a thread for the image generation
-t = threading.Thread(target=create_image, args=(seed, output_folder))
-t.start()
-
-# Wait for the thread to complete
-t.join()
-
-# Prepare the image file path
-nft_image_filename = os.path.join(output_folder, f"nft_seed{seed}.png")  # Change this line
-
-# Load the generated image
-img = image.load_img(nft_image_filename, target_size=(224, 224))
-
 
 art_phrases = [
     "The artist's touch is evident in every stroke.",

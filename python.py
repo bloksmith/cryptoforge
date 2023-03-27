@@ -17,12 +17,14 @@ import csv
 import os
 from nft_metadata import create_metadata, save_metadata_to_json, save_metadata_to_csv
 import openai  # Add this import at the beginning of your code
+import tensorflow as tf
 
 # Add these missing imports
 from torch.autograd import Variable
 from torchvision.transforms import Compose, Normalize, ToTensor, Resize
 from torchvision.utils import save_image
 from pathlib import Path
+from dalle2_attribute_extractor import DALLE2AttributeExtractor
 
 filename = "your_filename_here"
 
@@ -43,6 +45,42 @@ phrases = [
 from PIL import Image
 import os
 
+def save_metadata_to_csv(metadata, csv_filename):
+    metadata_list = [metadata]  # Convert metadata to a list containing a single dictionary
+    keys = metadata_list[0].keys()
+
+    with open(csv_filename, "w", newline="", encoding="utf-8") as csv_file:
+        dict_writer = csv.DictWriter(csv_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(metadata_list)
+
+def save_metadata_to_json(metadata, json_filename):
+    with open(json_filename, "w") as json_file:
+        json.dump(metadata, json_file, indent=4)
+
+    return json_filename
+
+def extract_attribute_values(image_path):
+    # Implement your attribute extraction logic here.
+    # For now, I will return an example dictionary.
+    return {"attribute1": "value1", "attribute2": "value2"}
+def extract_image_features(image_path):
+    # Load the InceptionV3 model
+    model = tf.keras.applications.InceptionV3(include_top=False, weights='imagenet', pooling='avg')
+
+    # Load the image and resize it to the required dimensions for the model
+    image = Image.open(image_path)
+    image = image.resize((299, 299))
+
+    # Convert the image to a numpy array and normalize the pixel values
+    image_array = np.array(image) / 255.0
+    image_array = np.expand_dims(image_array, axis=0)
+
+    # Extract features from the image using the model
+    features = model.predict(image_array)
+    return features
+image_features = extract_image_features(image_path)
+print("Image features:", image_features)
 
 def extract_attributes(image_path):
     # Open the image using PIL
@@ -204,59 +242,46 @@ def draw_golden_spiral(draw, width, height, color=(255, 255, 255, 255), thicknes
 
 
 def create_image(seed, selected_model, style_weight, feature, output_folder, my_text, text):
-    
-
     random.seed(seed)
-    # Define the text you want to use
-    my_text = "This is my custom text for the NFT artwork"
-    text = "Some description"  # Replace this with the desired description or a variable containing the description.
-    
+
     content_image = Image.new('RGBA', (7680, 4320), (255, 255, 255, 255))
     gradient = create_gradient(7680, 4320)
     content_image.paste(gradient, (0, 0))
 
-    # Draw the Golden Spiral
     if feature == "golden_spiral":
         draw_golden_spiral(content_image)
 
     add_random_lines(content_image)
 
-    # Define the draw variable here
     draw = ImageDraw.Draw(content_image)
     output_folder = Path(output_folder)
     output_path = output_folder / f"{seed}-{feature}.png"
 
-    filename = output_path.stem  # Add this line to initialize filename
+    filename = output_path.stem
 
-    add_equation_curves(draw, content_image)  # Call add_equation_curves
+    add_equation_curves(draw, content_image)
 
-    frame_color = (0, 0, 0, 255)  # Changed the frame color
-    frame_width = 50  # Increased the frame width
+    frame_color = (0, 0, 0, 255)
+    frame_width = 50
     draw.rectangle([(frame_width, frame_width), (content_image.width - frame_width, content_image.height - frame_width)], outline=frame_color, width=frame_width)
 
+    if output_path:
+        attribute_values = extract_attribute_values(output_path)
+    else:
+        attribute_values = {}
+
     metadata = create_metadata(seed=seed, feature=feature, filename=filename, text=text, my_text=my_text, attribute_values=attribute_values)
-image_path = output_folder / filename
 
-# Save the image
-image.save(output_path)
-print(f"Image saved at {output_path}")
+    content_image.save(output_path)
+    print(f"Image saved to: {output_path}")
 
-# Extract attributes
-attribute_extractor = DALLE2AttributeExtractor(attribute_model)
-image_path = output_folder / filename
-attributes = attribute_extractor.extract_attributes(image_path)
-print(attributes)
-
-
-    # Save metadata to JSON file
     json_filename = output_folder / f"{seed}-{feature}.json"
     save_metadata_to_json(metadata, json_filename)
+    print(f"Metadata saved to: {json_filename}")
 
-    # Save metadata to CSV file
     csv_filename = os.path.join(output_folder, f"metadata_{seed}_{feature}.csv")
     save_metadata_to_csv(metadata, csv_filename)
 
-    # Add text
     art_phrases = [
         "Aesthetic Adventure",
     ]
@@ -266,15 +291,10 @@ print(attributes)
     text_size = font.getbbox(text)[2:4]
     draw.text(((content_image.width - text_size[0]) // 2, (content_image.height - text_size[1]) // 2), text, fill=(255, 255, 255, 255), font=font)
 
-    # Draw the golden spiral
-    draw_golden_spiral(draw, content_image.width, content_image.height)
+    styled_image = apply_style(content_image, selected_model, style_weight)
+    styled_filename = os.path.join(output_folder, f"nft_{seed}_styled_{feature}.png")
+    save_image(styled_image, styled_filename)
 
-    # Apply style transfer
-    styled_image = apply_style(content_image, model, style_weight)
-
-    # Save image
-    filename = os.path.join(output_folder, "nft_{}_styled_{}.png".format(seed, feature))
-    save_image(styled_image, filename)
 
     # Add text
     art_phrases = [
@@ -339,7 +359,8 @@ print(attributes)
     draw_golden_spiral(draw, content_image.width, content_image.height)
 
     # Apply style transfer
-    styled_image = apply_style(content_image, model, style_weight)
+    styled_image = apply_style(content_image, selected_model, style_weight)
+
 
     # Save image
     filename = os.path.join(output_folder, "nft_{}_styled_{}.png".format(seed, feature))
@@ -538,18 +559,23 @@ for i in range(num_images):
     my_text = "This is my custom text for the NFT artwork"
     text = "Some description"  # Replace this with the desired description or a variable containing the description.
     # Pass the output_folder to the create_image function
-    create_image(seed, selected_model, style_weight, feature, output_folder, my_text, text)
+create_image(seed, selected_model, style_weight, feature, output_folder, my_text, text)
+
+attribute_extractor = DALLE2AttributeExtractor(attribute_model)
+image_path = output_folder / filename
+attributes = attribute_extractor.extract_attributes(image_path)
+print(attributes)
 
 
-    print("Image {} generated with {} style, feature: {}, and style weight: {}".format(i+1, style_name, feature, style_weight))
-    json_file_path = save_metadata_to_json(metadata, output_folder, seed, feature)
-    print(f"JSON file saved at: {json_file_path}")
+print("Image {} generated with {} style, feature: {}, and style weight: {}".format(i+1, style_name, feature, style_weight))
+json_file_path = save_metadata_to_json(metadata, output_folder, seed, feature)
+print(f"JSON file saved at: {json_file_path}")
 
-    print(f"JSON file saved at: {json_filename}")
-    print(f"CSV file saved at: {os.path.join(output_folder, 'metadata.csv')}")
+print(f"JSON file saved at: {json_filename}")
+print(f"CSV file saved at: {os.path.join(output_folder, 'metadata.csv')}")
 
     
-    metadata_list = []
+metadata_list = []
 # Generate metadata
 metadata = create_metadata(seed, feature, "Viktor Sandstrøm Kristensen", filename,title )
 

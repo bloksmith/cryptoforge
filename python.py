@@ -20,14 +20,14 @@ import openai  # Add this import at the beginning of your code
 import tensorflow as tf
 import sys
 sys.path.append('/home/viktor/NFT/DALLE-pytorch')
-#from dalle2_attribute_extractor import DALLE2AttributeExtractor
+
 
 # Add these missing imports
 from torch.autograd import Variable
 from torchvision.transforms import Compose, Normalize, ToTensor, Resize
 from torchvision.utils import save_image
 from pathlib import Path
-#from dalle2_attribute_extractor import DALLE2AttributeExtractor
+
 from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input
 from tensorflow.keras.preprocessing import image
 import numpy as np
@@ -37,14 +37,36 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 from nft_metadata import create_metadata, save_metadata_to_csv, save_metadata_to_json
-from style_transfer import apply_style
-from attribute_extraction import extract_attribute_values
+
+#from attribute_extraction import extract_attribute_values
+
+import random
+import os
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont
+
+from nft_metadata import create_metadata, save_metadata_to_csv, save_metadata_to_json
+# Set seed value
+seed_value = 42
+os.environ['PYTHONHASHSEED']=str(seed_value)
+random.seed(seed_value)
+np.random.seed(seed_value)
+tf.random.set_seed(seed_value)
+
+# Generate filename dynamically based on seed value
+input_folder = "/home/viktor/NFT/output"
+nft_image_filename = os.path.join(input_folder, f"nft_seed42.jpg")
+
+
+# Load image
+img = image.load_img(nft_image_filename, target_size=(224, 224))
+
 
 # Load the pre-trained VGG16 model
 model = VGG16(weights='imagenet', include_top=False)
 
 # Load your NFT image and resize it to the input size expected by the VGG16 model
-img = image.load_img('your_nft_image.jpg', target_size=(224, 224))
+
 
 # Preprocess the image by converting it to a numpy array and applying the VGG16-specific preprocessing function
 img_arr = image.img_to_array(img)
@@ -271,15 +293,6 @@ def draw_golden_spiral(draw, width, height, color=(255, 255, 255, 255), thicknes
         )
 
 
-
-import random
-import os
-from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
-
-from nft_metadata import create_metadata, save_metadata_to_csv, save_metadata_to_json
-from style_transfer import apply_style
-from attribute_extraction import extract_attribute_values
 
 def create_image(seed, selected_model, style_weight, feature, output_folder, my_text, text):
     random.seed(seed)
@@ -601,7 +614,7 @@ for i in range(num_images):
     # Pass the output_folder to the create_image function
 create_image(seed, selected_model, style_weight, feature, output_folder, my_text, text)
 
-attribute_extractor = DALLE2AttributeExtractor(attribute_model)
+
 image_path = output_folder / filename
 attributes = attribute_extractor.extract_attributes(image_path)
 print(attributes)

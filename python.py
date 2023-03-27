@@ -97,6 +97,24 @@ phrases = [
 ]
 from PIL import Image
 import os
+import random
+
+def draw_spiral(draw, cx, cy, radius, steps, start_angle, angle_step, color, width_range=(1, 5)):
+    angle = start_angle
+    for _ in range(steps):
+        width = random.randint(width_range[0], width_range[1])  # Randomize brush thickness
+        x1 = cx + math.cos(math.radians(angle)) * radius
+        y1 = cy + math.sin(math.radians(angle)) * radius
+        angle += angle_step
+        x2 = cx + math.cos(math.radians(angle)) * radius
+        y2 = cy + math.sin(math.radians(angle)) * radius
+
+        draw.line((x1, y1, x2, y2), fill=color, width=width)
+        radius += 0.3
+
+def draw_line(draw, x1, y1, x2, y2, color, width_range=(1, 5)):
+    width = random.randint(width_range[0], width_range[1])  # Randomize brush thickness
+    draw.line((x1, y1, x2, y2), fill=color, width=width)
 
 def save_metadata_to_csv(metadata, csv_filename):
     metadata_list = [metadata]  # Convert metadata to a list containing a single dictionary
@@ -347,7 +365,18 @@ def create_image(seed, selected_model, style_weight, feature, output_folder, my_
     styled_image = apply_style(content_image, selected_model, style_weight)
     styled_filename = os.path.join(output_folder, f"nft_{seed}_styled_{feature}.png")
     save_image(styled_image, styled_filename)
+    save_path = os.path.join(output_folder, f"nft_seed{seed}.png")
+    final_image.save(save_path)
+    print(f"Image saved as {save_path}")
+nft_image_filename = create_image(seed)
+img = image.load_img(nft_image_filename, target_size=(224, 224))
+# Generate the image
+seed = 42
+nft_image_filename = create_image(seed)
 
+# Load the generated image
+img = image.load_img(nft_image_filename, target_size=(224, 224))
+return save_path
 
     # Add text
     art_phrases = [

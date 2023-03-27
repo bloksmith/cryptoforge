@@ -22,6 +22,8 @@ import openai  # Add this import at the beginning of your code
 from torch.autograd import Variable
 from torchvision.transforms import Compose, Normalize, ToTensor, Resize
 from torchvision.utils import save_image
+from pathlib import Path
+
 filename = "your_filename_here"
 
 
@@ -194,6 +196,10 @@ def create_image(seed, selected_model, style_weight, feature, output_folder, my_
 
     # Define the draw variable here
     draw = ImageDraw.Draw(content_image)
+    output_folder = Path(output_folder)
+    output_path = output_folder / f"{seed}-{feature}.png"
+
+    filename = output_path.stem  # Add this line to initialize filename
 
     add_equation_curves(draw, content_image)  # Call add_equation_curves
 
@@ -201,12 +207,14 @@ def create_image(seed, selected_model, style_weight, feature, output_folder, my_
     frame_width = 50  # Increased the frame width
     draw.rectangle([(frame_width, frame_width), (content_image.width - frame_width, content_image.height - frame_width)], outline=frame_color, width=frame_width)
 
-    metadata = create_metadata(seed=seed, feature=feature, filename=filename, text=text,
-                           title="NFT Artwork", artist="Viktor S. Kristensen", description=my_text)
+    metadata = create_metadata(seed=seed, feature=feature, filename=filename, text=text, my_text=my_text,
+
 
 
     # Save metadata to JSON file
-    json_filename = os.path.join(output_folder, f"metadata_{seed}_{feature}.json")
+    metadata = create_metadata(seed=seed, feature=feature, filename=filename, text=text, my_text=my_text,
+                           attribute_values=attribute_values)
+    json_filename = output_folder / f"{seed}-{feature}.json"
     save_metadata_to_json(metadata, json_filename)
 
     # Save metadata to CSV file
@@ -507,6 +515,8 @@ for i in range(num_images):
 
     
     metadata_list = []
+# Generate metadata
+metadata = create_metadata(seed, feature, "Viktor Sandstrøm Kristensen", filename,title )
 
 # Save metadata to JSON file
 json_filename = save_metadata_to_json(metadata, output_folder)
@@ -519,6 +529,3 @@ save_metadata_to_csv(metadata_list, output_folder)
 filename = os.path.join(output_folder, f"nft_{seed}_styled_{feature}.png")
 filename = filename.replace("nft_images_", "https://babyrottweiler.com/NFT/CryptoForge/collection/1/nft_images_")
 save_image(styled_image, filename)
-# Generate metadata
-metadata = create_metadata(seed, feature, "Viktor Sandstrøm Kristensen", filename,title )
-

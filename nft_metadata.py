@@ -1,11 +1,13 @@
 filename = "your_filename_here"
-def create_metadata(seed, feature, filename, text, title=None, artist=None, description=None):
+def create_metadata(seed, feature, filename, text, my_text, attribute_values=None):
+
     # Your function implementation here
 
     metadata = create_metadata(
     title="NFT Artwork",
     artist="Viktor S. Kristensen",
-    description=my_text,
+    description=text,
+
     seed=seed,
     feature=feature,
     filename=filename,  # Replace this with the correct variable

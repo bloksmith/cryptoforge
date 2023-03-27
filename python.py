@@ -40,6 +40,33 @@ phrases = [
     "Innovative Art",
     "Ethereal Beauty",
 ]
+from PIL import Image
+import os
+
+
+def extract_attributes(image_path):
+    # Open the image using PIL
+    img = Image.open(image_path)
+
+    # Extract image size (width and height)
+    width, height = img.size
+
+    # Extract file format
+    file_format = img.format
+
+    # Extract file size
+    file_size = os.path.getsize(image_path)
+
+    # Create a dictionary with the extracted attribute values
+    attribute_values = {
+        "width": width,
+        "height": height,
+        "format": file_format,
+        "file_size": file_size
+    }
+    image_path = f"{output_folder}/{filename}"
+    attribute_values = extract_attributes(image_path)
+    return attribute_values
 
 def generate_text(prompt, model="text-davinci-003", max_tokens=50):
     response = openai.Completion.create(
@@ -207,13 +234,21 @@ def create_image(seed, selected_model, style_weight, feature, output_folder, my_
     frame_width = 50  # Increased the frame width
     draw.rectangle([(frame_width, frame_width), (content_image.width - frame_width, content_image.height - frame_width)], outline=frame_color, width=frame_width)
 
-    metadata = create_metadata(seed=seed, feature=feature, filename=filename, text=text, my_text=my_text,
+    metadata = create_metadata(seed=seed, feature=feature, filename=filename, text=text, my_text=my_text, attribute_values=attribute_values)
+image_path = output_folder / filename
 
+# Save the image
+image.save(output_path)
+print(f"Image saved at {output_path}")
+
+# Extract attributes
+attribute_extractor = DALLE2AttributeExtractor(attribute_model)
+image_path = output_folder / filename
+attributes = attribute_extractor.extract_attributes(image_path)
+print(attributes)
 
 
     # Save metadata to JSON file
-    metadata = create_metadata(seed=seed, feature=feature, filename=filename, text=text, my_text=my_text,
-                           attribute_values=attribute_values)
     json_filename = output_folder / f"{seed}-{feature}.json"
     save_metadata_to_json(metadata, json_filename)
 

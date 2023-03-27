@@ -101,14 +101,10 @@ phrases = [
 from PIL import Image
 import os
 import random
-def wait_for_file(file_path, timeout=30):
-    start_time = time.time()
-    while not os.path.exists(file_path):
-        time.sleep(1)
-        if time.time() - start_time > timeout:
-            raise Exception(f"Timeout waiting for file {file_path}")
+
 
 def draw_spiral(draw, cx, cy, radius, steps, start_angle, angle_step, color, width_range=(1, 5)):
+
     angle = start_angle
     for _ in range(steps):
         width = random.randint(width_range[0], width_range[1])  # Randomize brush thickness
@@ -122,6 +118,7 @@ def draw_spiral(draw, cx, cy, radius, steps, start_angle, angle_step, color, wid
         radius += 0.3
 
 def draw_line(draw, x1, y1, x2, y2, color, width_range=(1, 5)):
+
     width = random.randint(width_range[0], width_range[1])  # Randomize brush thickness
     draw.line((x1, y1, x2, y2), fill=color, width=width)
 
@@ -321,7 +318,8 @@ def draw_golden_spiral(draw, width, height, color=(255, 255, 255, 255), thicknes
 
 
 
-def create_image(seed, selected_model, style_weight, feature, output_folder, my_text, text):
+def create_image(seed: int, output_folder: str = "output") -> str:
+
     random.seed(seed)
 
     content_image = Image.new('RGBA', (7680, 4320), (255, 255, 255, 255))
@@ -379,17 +377,25 @@ def create_image(seed, selected_model, style_weight, feature, output_folder, my_
     print(f"Image saved as {save_path}")
 
     return save_path
+def wait_for_file(file_path, timeout=30):
+    start_time = time.time()
+    while not os.path.exists(file_path):
+        time.sleep(1)
+        if time.time() - start_time > timeout:
+            raise Exception(f"Timeout waiting for file {file_path}")
+            
 nft_image_filename = create_image(seed)
 img = image.load_img(nft_image_filename, target_size=(224, 224))
-# Generate the image
 # Generate the image
 # Generate the image
 # Generate the image
 seed = 42
 nft_image_filename = create_image(seed)
 
+
 # Wait for the image to be saved
 wait_for_file(nft_image_filename)
+
 
 # Load the generated image
 img = image.load_img(nft_image_filename, target_size=(224, 224))

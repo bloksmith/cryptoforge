@@ -19,6 +19,9 @@ from nft_metadata import create_metadata, save_metadata_to_json, save_metadata_t
 import openai  # Add this import at the beginning of your code
 import tensorflow as tf
 import sys
+import os
+import time
+
 sys.path.append('/home/viktor/NFT/DALLE-pytorch')
 
 
@@ -98,6 +101,12 @@ phrases = [
 from PIL import Image
 import os
 import random
+def wait_for_file(file_path, timeout=30):
+    start_time = time.time()
+    while not os.path.exists(file_path):
+        time.sleep(1)
+        if time.time() - start_time > timeout:
+            raise Exception(f"Timeout waiting for file {file_path}")
 
 def draw_spiral(draw, cx, cy, radius, steps, start_angle, angle_step, color, width_range=(1, 5)):
     angle = start_angle
@@ -368,18 +377,32 @@ def create_image(seed, selected_model, style_weight, feature, output_folder, my_
     save_path = os.path.join(output_folder, f"nft_seed{seed}.png")
     final_image.save(save_path)
     print(f"Image saved as {save_path}")
+
+    return save_path
 nft_image_filename = create_image(seed)
 img = image.load_img(nft_image_filename, target_size=(224, 224))
+# Generate the image
+# Generate the image
+# Generate the image
 # Generate the image
 seed = 42
 nft_image_filename = create_image(seed)
 
+# Wait for the image to be saved
+wait_for_file(nft_image_filename)
+
 # Load the generated image
 img = image.load_img(nft_image_filename, target_size=(224, 224))
-return save_path
 
-    # Add text
-    art_phrases = [
+
+
+art_phrases = [
+    "The artist's touch is evident in every stroke.",
+    "An evocative interplay of color and form.",
+    "The juxtaposition of elements creates an intriguing tension.",
+    "A harmonious blend of abstraction and figuration.",
+    "One can sense the emotion poured into this piece.",
+
         "Aesthetic Adventure",
         "Imaginative Journey",
         "Visionary Voyage",
@@ -432,21 +455,21 @@ return save_path
         "Sensational Scene",
     ]
 
-    text = random.choice(art_phrases)
-    font = ImageFont.truetype("arial.ttf", 600)
-    text_size = font.getbbox(text)[2:4]
-    draw.text(((content_image.width - text_size[0]) // 2, (content_image.height - text_size[1]) // 2), text, fill=(255, 255, 255, 255), font=font)
+text = random.choice(art_phrases)
+font = ImageFont.truetype("arial.ttf", 600)
+text_size = font.getbbox(text)[2:4]
+draw.text(((content_image.width - text_size[0]) // 2, (content_image.height - text_size[1]) // 2), text, fill=(255, 255, 255, 255), font=font)
 
     # Draw the golden spiral
-    draw_golden_spiral(draw, content_image.width, content_image.height)
+draw_golden_spiral(draw, content_image.width, content_image.height)
 
     # Apply style transfer
-    styled_image = apply_style(content_image, selected_model, style_weight)
+styled_image = apply_style(content_image, selected_model, style_weight)
 
 
     # Save image
-    filename = os.path.join(output_folder, "nft_{}_styled_{}.png".format(seed, feature))
-    save_image(styled_image, filename)
+filename = os.path.join(output_folder, "nft_{}_styled_{}.png".format(seed, feature))
+save_image(styled_image, filename)
 
 
 

@@ -336,10 +336,15 @@ def draw_golden_spiral(draw, width, height, color=(255, 255, 255, 255), thicknes
 
 
 
-def create_image(seed: int, output_folder: str = "output") -> str:
+def create_image(seed):
+
 
     random.seed(seed)
-
+for layer_name, property in properties.items():
+if property == "golden_spiral":
+draw_golden_spiral(draw, layer["center"], layer["radius"], layer["angle"]) 
+elif property == "square_spiral":
+draw_square_spiral(draw, layer["center"], layer["size"], layer["angle"], layer["spacing"])
     content_image = Image.new('RGBA', (7680, 4320), (255, 255, 255, 255))
     gradient = create_gradient(7680, 4320)
     content_image.paste(gradient, (0, 0))

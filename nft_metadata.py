@@ -1,13 +1,14 @@
-def create_metadata(seed, feature, filename, text, my_text, attribute_values=None):
+def create_metadata(seed, feature, filename, text, my_text, image_features=None, attribute_values=None):
     metadata = {
-        "title": "NFT Artwork",
-        "artist": "Viktor S. Kristensen",
+        "name": f"NFT Artwork {seed}-{feature}",
         "description": text,
-        "seed": seed,
-        "feature": feature,
-        "filename": filename,
-        "text": text
+        "my_text": my_text,
+        "image": filename,
+        "image_features": image_features,
+        "attributes": attribute_values
     }
+
+    return metadata
     if attribute_values:
         metadata["attributes"] = attribute_values
     return metadata

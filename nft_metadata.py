@@ -1,18 +1,15 @@
-filename = "your_filename_here"
 def create_metadata(seed, feature, filename, text, my_text, attribute_values=None):
-
-    # Your function implementation here
-
-    metadata = create_metadata(
-    title="NFT Artwork",
-    artist="Viktor S. Kristensen",
-    description=text,
-
-    seed=seed,
-    feature=feature,
-    filename=filename,  # Replace this with the correct variable
-    text=text           # Replace this with the correct variable
-) 
+    metadata = {
+        "title": "NFT Artwork",
+        "artist": "Viktor S. Kristensen",
+        "description": text,
+        "seed": seed,
+        "feature": feature,
+        "filename": filename,
+        "text": text
+    }
+    if attribute_values:
+        metadata["attributes"] = attribute_values
     return metadata
 
 def save_metadata_to_json(metadata, output_folder, seed, feature):
@@ -23,11 +20,13 @@ def save_metadata_to_json(metadata, output_folder, seed, feature):
 
     return json_filename
 
-def save_metadata_to_csv(metadata_list, output_folder, csv_filename="metadata.csv"):
+def save_metadata_to_csv(metadata, csv_filename):
+    metadata_list = [metadata]  # Convert metadata to a list containing a single dictionary
     keys = metadata_list[0].keys()
-    csv_file_path = os.path.join(output_folder, csv_filename)
 
-    with open(csv_file_path, "w", newline="", encoding="utf-8") as csv_file:
+    with open(csv_filename, "w", newline="", encoding="utf-8") as csv_file:
         dict_writer = csv.DictWriter(csv_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(metadata_list)
+
+
